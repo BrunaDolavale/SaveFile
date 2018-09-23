@@ -1,4 +1,4 @@
-package com.developer.bianca.authenticatorproject.domain;
+package com.developer.bianca.savelocalfileproject.domain;
 
 import java.io.Serializable;
 

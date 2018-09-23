@@ -1,7 +1,6 @@
-package com.developer.bianca.authenticatorproject;
+package com.developer.bianca.savelocalfileproject;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,17 +8,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.developer.bianca.authenticatorproject.Utils.Constants;
-import com.developer.bianca.authenticatorproject.domain.User;
+import com.developer.bianca.savelocalfileproject.Utils.Constants;
+import com.developer.bianca.savelocalfileproject.domain.User;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -133,10 +130,9 @@ public class SignUpActivity extends AppCompatActivity {
         String passwordConfirm = passwordConfirmField.getText().toString();
         String cpf = cpfField.getText().toString();
 
-        //FIXME: implement the function to save the data on txt for the local storage of the user.
         if (isNameValid && isEmailValid && isPasswordValid && isPasswordConfirmedValid && isCpfValid) {
             try {
-                //SALVAR NA MEMÓRIA INTERNA
+                //SALVA NA MEMÓRIA INTERNA
                 fileOutputStream = openFileOutput(String.valueOf(Constants.USERS_FILENAME), Context.MODE_APPEND | Context.MODE_PRIVATE);
 
                 final User user = new User(name, email, password, passwordConfirm, cpf);
