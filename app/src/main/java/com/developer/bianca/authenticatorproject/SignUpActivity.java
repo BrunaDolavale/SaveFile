@@ -1,27 +1,31 @@
 package com.developer.bianca.authenticatorproject;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.developer.bianca.authenticatorproject.Utils.Constants;
 import com.developer.bianca.authenticatorproject.domain.User;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    FirebaseDatabase database;
-    DatabaseReference signupRef;
+    FileOutputStream fileOutputStream;
 
     EditText nameField, emailField, passwordField, passwordConfirmField, cpfField;
     boolean isNameValid, isEmailValid, isPasswordValid, isPasswordConfirmedValid, isCpfValid;
@@ -30,9 +34,6 @@ public class SignUpActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
-
-        database = FirebaseDatabase.getInstance();
-        signupRef = database.getReference(Constants.REGISTERS_ENDPOINT);
 
         nameField = findViewById(R.id.name_edit_text);
         emailField = findViewById(R.id.email_to_login_et);
@@ -55,7 +56,7 @@ public class SignUpActivity extends AppCompatActivity {
         emailField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if(!hasFocus && ((isEmailValid(emailField.getText().toString())) == false)){
+                if (!hasFocus && ((isEmailValid(emailField.getText().toString())) == false)) {
                     emailField.setError("Campo obrigatório. Digite um e-mail válido");
                     isEmailValid = false;
                 } else {
@@ -64,14 +65,12 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
-        //FIXME: por algum motivo está salvando o mesmo input que o e-mail. E está dizendo que as senhas são iguais.
-        //E por isso, está salvando no banco normalmente, por estar tudo com valided = true;
-        final String password = emailField.getText().toString();
+        final String password = passwordField.getText().toString();
         final String passwordConfirm = passwordConfirmField.getText().toString();
         passwordField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if(!hasFocus && ((!password.equals(passwordConfirm)) || (passwordField.getText().toString().trim().equals("")))){
+                if (!hasFocus && ((!password.equals(passwordConfirm)) || (passwordField.getText().toString().trim().equals("")))) {
                     passwordField.setError("Campo obrigatório. As senhas devem ser iguais.");
                     isPasswordValid = false;
                 } else {
@@ -83,7 +82,7 @@ public class SignUpActivity extends AppCompatActivity {
         passwordConfirmField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if(!hasFocus && ((!password.equals(passwordConfirm)) || (passwordField.getText().toString().trim().equals("")))){
+                if (!hasFocus && ((!password.equals(passwordConfirm)) || (passwordField.getText().toString().trim().equals("")))) {
                     passwordConfirmField.setError("Campo obrigatório. As senhas devem ser iguais.");
                     isPasswordConfirmedValid = false;
                 } else {
@@ -92,10 +91,11 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
+        //TODO: validar campo CPF.
         cpfField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if(!hasFocus && cpfField.getText().toString().trim().equals("")){
+                if (!hasFocus && cpfField.getText().toString().trim().equals("")) {
                     cpfField.setError("Campo obrigatório");
                     isCpfValid = false;
                 } else {
@@ -105,22 +105,21 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    public boolean isEmailValid(String email)
-    {
+    public boolean isEmailValid(String email) {
         String regExpn =
                 "^(([\\w-]+\\.)+[\\w-]+|([a-zA-Z]{1}|[\\w-]{2,}))@"
-                        +"((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
-                        +"[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\."
-                        +"([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
-                        +"[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
-                        +"([a-zA-Z]+[\\w-]+\\.)+[a-zA-Z]{2,4})$";
+                        + "((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
+                        + "[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\."
+                        + "([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
+                        + "[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
+                        + "([a-zA-Z]+[\\w-]+\\.)+[a-zA-Z]{2,4})$";
 
         CharSequence inputStr = email;
 
-        Pattern pattern = Pattern.compile(regExpn,Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile(regExpn, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(inputStr);
 
-        if(matcher.matches())
+        if (matcher.matches())
             return true;
         else
             return false;
@@ -130,33 +129,81 @@ public class SignUpActivity extends AppCompatActivity {
 
         String name = nameField.getText().toString();
         String email = emailField.getText().toString();
-        String password = emailField.getText().toString();
+        String password = passwordField.getText().toString();
         String passwordConfirm = passwordConfirmField.getText().toString();
         String cpf = cpfField.getText().toString();
 
-        final User user = new User(name, email, password, passwordConfirm, cpf);
+        //FIXME: implement the function to save the data on txt for the local storage of the user.
+        if (isNameValid && isEmailValid && isPasswordValid && isPasswordConfirmedValid && isCpfValid) {
+            try {
+                //SALVAR NA MEMÓRIA INTERNA
+                fileOutputStream = openFileOutput(String.valueOf(Constants.USERS_FILENAME), Context.MODE_APPEND | Context.MODE_PRIVATE);
 
-        if (isNameValid && isEmailValid && isPasswordValid && isPasswordConfirmedValid && isCpfValid){
-            signupRef.push().setValue(user);
+                final User user = new User(name, email, password, passwordConfirm, cpf);
+
+                user.setName(name);
+                user.setEmail(email);
+                user.setPassword(password);
+                user.setPasswordConfirm(passwordConfirm);
+                user.setCpf(cpf);
+
+                fileOutputStream.write("#\n".getBytes());
+                fileOutputStream.write(user.getName().getBytes());
+                fileOutputStream.write("\n".getBytes());
+                fileOutputStream.write(user.getEmail().getBytes());
+                fileOutputStream.write("\n".getBytes());
+                fileOutputStream.write(user.getPassword().getBytes());
+                fileOutputStream.write("\n".getBytes());
+                fileOutputStream.write(user.getPasswordConfirm().getBytes());
+                fileOutputStream.write("\n".getBytes());
+                fileOutputStream.write(user.getCpf().getBytes());
+                fileOutputStream.write("\n".getBytes());
+                fileOutputStream.close();
+
+                Toast.makeText(getApplicationContext(), "Usuário salvo com sucesso!", Toast.LENGTH_LONG).show();
+
+                //APÓS SALVAR O ARQUIVO, EXIBIR UM ANÚNCIO DO TIPO INTERSTICIAL,
+                //QUE DEVE SER IMPLEMENTADO ATRAVÉS DO ADMOB
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "Dados não foram salvos. Tente novamente.", Toast.LENGTH_SHORT).show();
+        }
+        //startActivity(new Intent(getApplicationContext(), LoginActivity.class));
+        readFromFile();
+    }
+
+    public String readFromFile() {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = openFileInput(Constants.USERS_FILENAME);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+                Log.d("Dados salvos:" ,ret);
+            }
+
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
         }
 
-        signupRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    Toast.makeText(getApplicationContext(), "Usuário cadastrado com sucesso!", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Erro ao registrar novo usuário. Entre em contato com o suporte.", Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        //FIXME: dessa maneira está iniciando a activity. Se for o caso de já está em memória, não sei como chamar.
-        startActivity(new Intent(getApplicationContext(), LoginActivity.class));
+        return ret;
     }
 
     public void clearFormSignUp(View view) {
