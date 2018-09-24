@@ -1,6 +1,7 @@
 package com.developer.bianca.savelocalfileproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,10 @@ import android.widget.Toast;
 
 import com.developer.bianca.savelocalfileproject.Utils.Constants;
 import com.developer.bianca.savelocalfileproject.domain.User;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -27,16 +32,27 @@ public class SignUpActivity extends AppCompatActivity {
     EditText nameField, emailField, passwordField, passwordConfirmField, cpfField;
     boolean isNameValid, isEmailValid, isPasswordValid, isPasswordConfirmedValid, isCpfValid;
 
+    private InterstitialAd mInterstitialAd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+
+        MobileAds.initialize(this, "ca-app-pub-3940256099942544/1033173712");
+
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
 
         nameField = findViewById(R.id.name_edit_text);
         emailField = findViewById(R.id.email_to_login_et);
         passwordField = findViewById(R.id.password_edit_text);
         passwordConfirmField = findViewById(R.id.confirm_password_et);
         cpfField = findViewById(R.id.cpf_edit_text);
+
+        //Adiciona máscara no editText do cpf
+        cpfField.addTextChangedListener(ValidateCPF.mask(cpfField, ValidateCPF.FORMAT_CPF));
 
         nameField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -88,7 +104,6 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
-        //TODO: validar campo CPF.
         cpfField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
@@ -98,6 +113,34 @@ public class SignUpActivity extends AppCompatActivity {
                 } else {
                     isCpfValid = true;
                 }
+            }
+        });
+
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the interstitial ad is closed.
+                startActivity(new Intent(getApplicationContext(), TasksActivity.class));
             }
         });
     }
@@ -143,31 +186,33 @@ public class SignUpActivity extends AppCompatActivity {
                 user.setPasswordConfirm(passwordConfirm);
                 user.setCpf(cpf);
 
-                fileOutputStream.write("#\n".getBytes());
-                fileOutputStream.write(user.getName().getBytes());
-                fileOutputStream.write("\n".getBytes());
-                fileOutputStream.write(user.getEmail().getBytes());
-                fileOutputStream.write("\n".getBytes());
-                fileOutputStream.write(user.getPassword().getBytes());
-                fileOutputStream.write("\n".getBytes());
-                fileOutputStream.write(user.getPasswordConfirm().getBytes());
-                fileOutputStream.write("\n".getBytes());
-                fileOutputStream.write(user.getCpf().getBytes());
-                fileOutputStream.write("\n".getBytes());
-                fileOutputStream.close();
+//                fileOutputStream.write("#\n".getBytes());
+//                fileOutputStream.write(user.getName().getBytes());
+//                fileOutputStream.write("\n".getBytes());
+//                fileOutputStream.write(user.getEmail().getBytes());
+//                fileOutputStream.write("\n".getBytes());
+//                fileOutputStream.write(user.getPassword().getBytes());
+//                fileOutputStream.write("\n".getBytes());
+//                fileOutputStream.write(user.getPasswordConfirm().getBytes());
+//                fileOutputStream.write("\n".getBytes());
+//                fileOutputStream.write(user.getCpf().getBytes());
+//                fileOutputStream.write("\n".getBytes());
+//                fileOutputStream.close();
 
                 Toast.makeText(getApplicationContext(), "Usuário salvo com sucesso!", Toast.LENGTH_LONG).show();
 
-                //APÓS SALVAR O ARQUIVO, EXIBIR UM ANÚNCIO DO TIPO INTERSTICIAL,
-                //QUE DEVE SER IMPLEMENTADO ATRAVÉS DO ADMOB
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             Toast.makeText(this, "Dados não foram salvos. Tente novamente.", Toast.LENGTH_SHORT).show();
         }
-        //startActivity(new Intent(getApplicationContext(), LoginActivity.class));
         readFromFile();
+        if(mInterstitialAd.isLoaded()){
+            mInterstitialAd.show();
+        } else {
+            Log.d("TAG", "The interstitial wasn't loaded yet.");
+        }
     }
 
     public String readFromFile() {

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Authenticator Project</string>
     <string name="login_btn">Login</string>
-    <string name="cadastro">Cadastro</string>
+    <string name="cadastro">Cadastrar</string>
     <string name="entrar_via_facebook">Entrar via Facebook</string>
     <string name="clean">Limpar</string>
     <string name="register">Cadastrar</string>

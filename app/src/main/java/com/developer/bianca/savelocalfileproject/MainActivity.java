@@ -3,9 +3,14 @@ package com.developer.bianca.savelocalfileproject;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
+import com.google.android.gms.ads.InterstitialAd;
+
 public class MainActivity extends AppCompatActivity {
+
+    private InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,11 +20,5 @@ public class MainActivity extends AppCompatActivity {
 
     public void register(View view) {
         startActivity(new Intent(this, SignUpActivity.class));
-    }
-
-
-    public void login(View view) {
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
     }
 }

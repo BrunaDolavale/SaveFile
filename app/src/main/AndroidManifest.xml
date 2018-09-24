@@ -18,7 +18,6 @@
             </intent-filter>
         </activity>
         <activity android:name="com.developer.bianca.savelocalfileproject.SignUpActivity" />
-        <activity android:name="com.developer.bianca.savelocalfileproject.LoginActivity" />
         <activity android:name="com.developer.bianca.savelocalfileproject.TasksActivity"></activity>
     </application>
 
